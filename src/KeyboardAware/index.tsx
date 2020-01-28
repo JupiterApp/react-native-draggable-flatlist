@@ -312,6 +312,7 @@ function KeyboardAwareHOC(
       if (keyboardOpeningTime === undefined) {
         keyboardOpeningTime = this.props.keyboardOpeningTime || 0
       }
+      const extraOffset = isIphoneX() ? 250 : 200;
       setTimeout(() => {
         if (!this.mountedComponent) {
           return
@@ -320,7 +321,7 @@ function KeyboardAwareHOC(
         responder &&
           responder.scrollResponderScrollNativeHandleToKeyboard(
             reactNode,
-            extraHeight,
+            extraOffset,
             true
           )
       }, keyboardOpeningTime)
