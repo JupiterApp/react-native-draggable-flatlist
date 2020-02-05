@@ -112,12 +112,14 @@ export type KeyboardAwareHOCOptions = {
   extractNativeRef: Function
 }
 
+// @ts-ignore
 function getDisplayName(WrappedComponent) {
   return WrappedComponent && (WrappedComponent.displayName || WrappedComponent.name) || 'Component'
 }
 
 const ScrollIntoViewDefaultOptions: KeyboardAwareHOCOptions = {
   enableOnAndroid: false,
+  // @ts-ignore
   contentContainerStyle: undefined,
   enableAutomaticScroll: true,
   extraHeight: _KAM_EXTRA_HEIGHT,
@@ -147,6 +149,7 @@ const ScrollIntoViewDefaultOptions: KeyboardAwareHOCOptions = {
 }
 
 function KeyboardAwareHOC(
+  // @ts-ignore
   ScrollableComponent,
   userOptions: KeyboardAwareHOCOptions
 ) {
@@ -163,7 +166,9 @@ function KeyboardAwareHOC(
     keyboardWillHideEvent: Function
     position: ContentOffset
     defaultResetScrollToCoords: { x: number, y: number }
+    // @ts-ignore
     mountedComponent: boolean
+    // @ts-ignore
     handleOnScroll: Function
     state: KeyboardAwareHOCState
     static displayName = `KeyboardAware${getDisplayName(ScrollableComponent)}`
@@ -203,11 +208,14 @@ function KeyboardAwareHOC(
 
     constructor(props: KeyboardAwareHOCProps) {
       super(props)
+      // @ts-ignore
       this.keyboardWillShowEvent = undefined
+      // @ts-ignore
       this.keyboardWillHideEvent = undefined
       // @ts-ignore
       this.callbacks = {}
       this.position = { x: 0, y: 0 }
+      // @ts-ignore
       this.defaultResetScrollToCoords = null
       const keyboardSpace: number = props.viewIsInsideTabBar
         ? _KAM_DEFAULT_TAB_BAR_HEIGHT
@@ -240,11 +248,13 @@ function KeyboardAwareHOC(
 
       supportedKeyboardEvents.forEach((eventName: string) => {
         const callbackName = keyboardEventToCallbackName(eventName)
+        // @ts-ignore
         if (this.props[callbackName]) {
           // @ts-ignore
           this.callbacks[eventName] = Keyboard.addListener(
             // @ts-ignore
             eventName,
+            // @ts-ignore
             this.props[callbackName]
           )
         }
@@ -328,6 +338,7 @@ function KeyboardAwareHOC(
     }
 
     scrollIntoView = async (
+      // @ts-ignore
       element,
       options: ScrollIntoViewOptions = {}
     ) => {
@@ -362,10 +373,12 @@ function KeyboardAwareHOC(
       }
     }
 
+    // @ts-ignore
     _measureElement = (element): Promise<ElementLayout> => {
       const node = findNodeHandle(element)
       return new Promise((resolve) => {
         UIManager.measureInWindow(
+          // @ts-ignore
           node,
           (x: number, y: number, width: number, height: number) => {
             resolve({ x, y, width, height })
@@ -404,6 +417,7 @@ function KeyboardAwareHOC(
                     // @ts-ignore
                   const keyboardPosition = frames.endCoordinates.screenY
                   const totalExtraHeight =
+                  // @ts-ignore
                     this.props.extraScrollHeight + this.props.extraHeight
                   if (Platform.OS === 'ios') {
                     if (
@@ -456,6 +470,7 @@ function KeyboardAwareHOC(
       this.setState({ keyboardSpace })
       // Reset scroll position after keyboard dismissal
       if (this.props.enableResetScrollToCoords === false) {
+        // @ts-ignore
         this.defaultResetScrollToCoords = null
         return
       } else if (this.props.resetScrollToCoords) {
@@ -467,6 +482,7 @@ function KeyboardAwareHOC(
             this.defaultResetScrollToCoords.y,
             true
           )
+          // @ts-ignore
           this.defaultResetScrollToCoords = null
         } else {
           this.scrollToPosition(0, 0, true)
@@ -485,6 +501,7 @@ function KeyboardAwareHOC(
       const reactNode = ReactNative.findNodeHandle(nodeID)
       this.scrollToFocusedInput(
         reactNode,
+        // @ts-ignore
         extraHeight + this.props.extraScrollHeight,
         keyboardOpeningTime !== undefined
           ? keyboardOpeningTime
@@ -493,11 +510,13 @@ function KeyboardAwareHOC(
     }
 
     _handleOnScroll = (
+      // @ts-ignore
       e
     ) => {
       this.position = e.nativeEvent.contentOffset
     }
 
+    // @ts-ignore
     _handleRef = (ref) => {
       this._rnkasv_keyboardView = ref ? hocOptions.extractNativeRef(ref) : ref
       if (this.props.innerRef) {
@@ -521,6 +540,7 @@ function KeyboardAwareHOC(
       let newContentContainerStyle
       if (Platform.OS === 'android' && enableOnAndroid) {
         newContentContainerStyle = [].concat(contentContainerStyle).concat({
+          // @ts-ignore
           paddingBottom:
             ((contentContainerStyle || {}).paddingBottom || 0) +
             this.state.keyboardSpace
