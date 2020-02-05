@@ -1,7 +1,8 @@
 # React Native Draggable FlatList
 
 A drag-and-drop-enabled FlatList component for React Native.<br />
-Fully native interactions powered by [Reanimated](https://github.com/kmagiera/react-native-reanimated) and [React Native Gesture Handler](https://github.com/kmagiera/react-native-gesture-handler)
+Fully native interactions powered by [Reanimated](https://github.com/kmagiera/react-native-reanimated) and [React Native Gesture Handler](https://github.com/kmagiera/react-native-gesture-handler).<br /><br />
+To use swipeable list items in a DraggableFlatList see [React Native Swipeable Item](https://github.com/computerjazz/react-native-swipeable-item).
 
 ![Draggable FlatList demo](https://i.imgur.com/xHCylq1.gif)
 
@@ -28,6 +29,7 @@ Name | Type | Description
 `autoscrollSpeed` | `number` | Determines how fast the list autoscrolls.
 `onRef` | `(ref: React.RefObject<DraggableFlatList<T>>) => void` |  Returns underlying Animated FlatList ref.
 `animationConfig` | `Partial<Animated.SpringConfig>` |  Configure list animations. See [reanimated spring config](https://github.com/software-mansion/react-native-reanimated/blob/master/react-native-reanimated.d.ts#L112-L120)
+`activationDistance` | `number` | Distance a finger must travel before the gesture handler activates. Useful when using a draggable list within a TabNavigator so that the list does not capture navigator gestures.
 
 ## Example
 

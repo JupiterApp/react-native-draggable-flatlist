@@ -1,12 +1,17 @@
 {
   "name": "react-native-draggable-flatlist",
-  "version": "2.0.13",
+  "version": "2.2.0",
   "description": "A drag-and-drop-enabled FlatList component for React Native",
-  "main": "built/index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "prepare": "rm -rf built && tsc",
-    "start": "tsc -w --outDir built",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   },
   "repository": {
     "type": "git",
@@ -35,14 +40,16 @@
     "react-native-reanimated": "^1.0.0"
   },
   "devDependencies": {
-    "@types/react": "^16.9.17",
-    "@types/react-native": "^0.60.30",
+    "react-native-iphone-x-helper": "^1.2.1",
+    "typescript": "^3.7.4",
+    "@types/react": "^16.8.8",
+    "@types/react-native": "^0.60.8",
+    "husky": "^4.2.0",
+    "prettier": "1.19.1",
+    "pretty-quick": "^2.0.1",
     "react": "^16.12.0",
     "react-native": "^0.61.5",
     "react-native-gesture-handler": "^1.5.3",
-    "react-native-iphone-x-helper": "^1.2.1",
-    "react-native-reanimated": "^1.6.0",
-    "typescript": "^3.7.4"
-  },
-  "dependencies": {}
+    "react-native-reanimated": "^1.7.0"
+  }
 }

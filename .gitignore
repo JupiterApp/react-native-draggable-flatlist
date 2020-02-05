@@ -59,3 +59,5 @@ buck-out/
 /ios/Pods/
 
 built
+node_modules/**/*
+/lib
