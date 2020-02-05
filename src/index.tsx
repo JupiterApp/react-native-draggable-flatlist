@@ -17,6 +17,7 @@ import {
 } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { springFill, setupCell } from "./procs";
+import listenToKeyboardEvents from './KeyboardAware';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
@@ -990,7 +991,8 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   }
 }
 
-export default DraggableFlatList;
+const DraggableKeyboardAwareFlatList = listenToKeyboardEvents(DraggableFlatList);
+export {DraggableFlatList, DraggableKeyboardAwareFlatList}
 
 type RowItemProps<T> = {
   extraData?: any;
