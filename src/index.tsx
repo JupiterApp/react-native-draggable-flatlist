@@ -17,7 +17,7 @@ import {
   PanGestureHandlerEventExtra
 } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { getOnCellTap, springFill, setupCell } from "./procs";
+import { springFill, setupCell } from "./procs";
 import listenToKeyboardEvents from "./KeyboardAware";
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
