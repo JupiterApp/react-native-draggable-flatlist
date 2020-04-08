@@ -16,8 +16,8 @@ import {
   PanGestureHandlerEventExtra
 } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { springFill, setupCell } from "./procs";
-import listenToKeyboardEvents from './KeyboardAware';
+import { getOnCellTap, springFill, setupCell } from "./procs";
+import listenToKeyboardEvents from "./KeyboardAware";
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
@@ -815,6 +815,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           horizontal
             ? styles.hoverComponentHorizontal
             : styles.hoverComponentVertical,
+          // @ts-ignore
           {
             opacity: this.hoverComponentOpacity,
             transform: [
@@ -991,8 +992,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   }
 }
 
-const DraggableKeyboardAwareFlatList = listenToKeyboardEvents(DraggableFlatList);
-export {DraggableFlatList, DraggableKeyboardAwareFlatList}
+const DraggableKeyboardAwareFlatList = listenToKeyboardEvents(
+  DraggableFlatList
+);
+export { DraggableFlatList, DraggableKeyboardAwareFlatList };
 
 type RowItemProps<T> = {
   extraData?: any;
