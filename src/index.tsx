@@ -811,6 +811,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
 
     return (
       <Animated.View
+        // @ts-ignore
         style={[
           horizontal
             ? styles.hoverComponentHorizontal
