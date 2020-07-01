@@ -1,5 +1,5 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import React from "react";
+import PropTypes from "prop-types";
 import {
   Keyboard,
   Platform,
@@ -7,114 +7,117 @@ import {
   TextInput,
   findNodeHandle,
   Animated
-} from 'react-native'
-import { isIphoneX } from 'react-native-iphone-x-helper'
+} from "react-native";
+import { isIphoneX } from "react-native-iphone-x-helper";
 
 interface KeyboardAwareInterface {
-  getScrollResponder: () => void,
-  scrollToPosition: (x: number, y: number, animated?: boolean) => void,
-  scrollToEnd: (animated?: boolean) => void,
-  scrollForExtraHeightOnAndroid: (extraHeight: number) => void,
+  getScrollResponder: () => void;
+  scrollToPosition: (x: number, y: number, animated?: boolean) => void;
+  scrollToEnd: (animated?: boolean) => void;
+  scrollForExtraHeightOnAndroid: (extraHeight: number) => void;
   scrollToFocusedInput: (
     reactNode: Object,
     extraHeight: number,
     keyboardOpeningTime: number
-  ) => void
+  ) => void;
 }
 
-
-const _KAM_DEFAULT_TAB_BAR_HEIGHT: number = isIphoneX() ? 83 : 49
-const _KAM_KEYBOARD_OPENING_TIME: number = 250
-const _KAM_EXTRA_HEIGHT: number = 75
+const _KAM_DEFAULT_TAB_BAR_HEIGHT: number = isIphoneX() ? 83 : 49;
+const _KAM_KEYBOARD_OPENING_TIME: number = 250;
+const _KAM_EXTRA_HEIGHT: number = 75;
 
 const supportedKeyboardEvents = [
-  'keyboardWillShow',
-  'keyboardDidShow',
-  'keyboardWillHide',
-  'keyboardDidHide',
-  'keyboardWillChangeFrame',
-  'keyboardDidChangeFrame'
-]
+  "keyboardWillShow",
+  "keyboardDidShow",
+  "keyboardWillHide",
+  "keyboardDidHide",
+  "keyboardWillChangeFrame",
+  "keyboardDidChangeFrame"
+];
 const keyboardEventToCallbackName = (eventName: string) =>
-  'on' + eventName[0].toUpperCase() + eventName.substring(1)
+  "on" + eventName[0].toUpperCase() + eventName.substring(1);
 const keyboardEventPropTypes = supportedKeyboardEvents.reduce(
   (acc: Object, eventName: string) => ({
     ...acc,
     [keyboardEventToCallbackName(eventName)]: PropTypes.func
   }),
   {}
-)
+);
 const keyboardAwareHOCTypeEvents = supportedKeyboardEvents.reduce(
   (acc: Object, eventName: string) => ({
     ...acc,
     [keyboardEventToCallbackName(eventName)]: Function
   }),
   {}
-)
+);
 
 export type KeyboardAwareHOCProps = {
-  viewIsInsideTabBar?: boolean,
+  viewIsInsideTabBar?: boolean;
   resetScrollToCoords?: {
-    x: number,
-    y: number
-  },
-  enableResetScrollToCoords?: boolean,
-  enableAutomaticScroll?: boolean,
-  extraHeight?: number,
-  extraScrollHeight?: number,
-  keyboardOpeningTime?: number,
-  onScroll?: Function,
-  update?: Function,
-  contentContainerStyle?: any,
-  enableOnAndroid?: boolean,
-  innerRef?: Function,
-}
+    x: number;
+    y: number;
+  };
+  enableResetScrollToCoords?: boolean;
+  enableAutomaticScroll?: boolean;
+  extraHeight?: number;
+  extraScrollHeight?: number;
+  keyboardOpeningTime?: number;
+  onScroll?: Function;
+  update?: Function;
+  contentContainerStyle?: any;
+  enableOnAndroid?: boolean;
+  innerRef?: Function;
+};
 export type KeyboardAwareHOCState = {
-  keyboardSpace: number
-}
+  keyboardSpace: number;
+};
 
 export type ElementLayout = {
-  x: number,
-  y: number,
-  width: number,
-  height: number
-}
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 export type ContentOffset = {
-  x: number,
-  y: number
-}
+  x: number;
+  y: number;
+};
 
 export type ScrollPosition = {
-  x: number,
-  y: number,
-  animated: boolean
-}
+  x: number;
+  y: number;
+  animated: boolean;
+};
 
 export type ScrollIntoViewOptions = {
   getScrollPosition?: (
     parentLayout: ElementLayout,
     childLayout: ElementLayout,
     contentOffset: ContentOffset
-  ) => ScrollPosition
-}
+  ) => ScrollPosition;
+};
 
 export type KeyboardAwareHOCOptions = {
-  enableOnAndroid: boolean,
-  contentContainerStyle: Object,
-  enableAutomaticScroll: boolean,
-  extraHeight: number,
-  extraScrollHeight: number,
-  enableResetScrollToCoords: boolean,
-  keyboardOpeningTime: number,
-  viewIsInsideTabBar: boolean,
-  refPropName: string,
-  extractNativeRef: Function
-}
+  enableOnAndroid: boolean;
+  contentContainerStyle: Object;
+  enableAutomaticScroll: boolean;
+  extraHeight: number;
+  extraScrollHeight: number;
+  enableResetScrollToCoords: boolean;
+  keyboardOpeningTime: number;
+  viewIsInsideTabBar: boolean;
+  refPropName: string;
+  extractNativeRef: Function;
+};
 
 // @ts-ignore
 function getDisplayName(WrappedComponent) {
-  return WrappedComponent && (WrappedComponent.displayName || WrappedComponent.name) || 'Component'
+  return (
+    (WrappedComponent &&
+      (WrappedComponent.displayName || WrappedComponent.name)) ||
+    "Component"
+  );
 }
 
 const ScrollIntoViewDefaultOptions: KeyboardAwareHOCOptions = {
@@ -131,7 +134,7 @@ const ScrollIntoViewDefaultOptions: KeyboardAwareHOCOptions = {
   // The ref prop name that will be passed to the wrapped component to obtain a ref
   // If your ScrollView is already wrapped, maybe the wrapper permit to get a ref
   // For example, with glamorous-native ScrollView, you should use "innerRef"
-  refPropName: 'ref',
+  refPropName: "ref",
   // Sometimes the ref you get is a ref to a wrapped view (ex: Animated.ScrollView)
   // We need access to the imperative API of a real native ScrollView so we need extraction logic
   extractNativeRef: (ref: Object) => {
@@ -141,12 +144,12 @@ const ScrollIntoViewDefaultOptions: KeyboardAwareHOCOptions = {
     // @ts-ignore
     if (ref.getNode) {
       // @ts-ignore
-      return ref.getNode()
+      return ref.getNode();
     } else {
-      return ref
+      return ref;
     }
   }
-}
+};
 
 function KeyboardAwareHOC(
   // @ts-ignore
@@ -156,22 +159,22 @@ function KeyboardAwareHOC(
   const hocOptions: KeyboardAwareHOCOptions = {
     ...ScrollIntoViewDefaultOptions,
     ...userOptions
-  }
+  };
 
   return class
     extends React.Component<KeyboardAwareHOCProps, KeyboardAwareHOCState>
     implements KeyboardAwareInterface {
-    _rnkasv_keyboardView: any
-    keyboardWillShowEvent: Function
-    keyboardWillHideEvent: Function
-    position: ContentOffset
-    defaultResetScrollToCoords: { x: number, y: number }
+    _rnkasv_keyboardView: any;
+    keyboardWillShowEvent: Function;
+    keyboardWillHideEvent: Function;
+    position: ContentOffset;
+    defaultResetScrollToCoords: { x: number; y: number };
     // @ts-ignore
-    mountedComponent: boolean
+    mountedComponent: boolean;
     // @ts-ignore
-    handleOnScroll: Function
-    state: KeyboardAwareHOCState
-    static displayName = `KeyboardAware${getDisplayName(ScrollableComponent)}`
+    handleOnScroll: Function;
+    state: KeyboardAwareHOCState;
+    static displayName = `KeyboardAware${getDisplayName(ScrollableComponent)}`;
 
     static propTypes = {
       viewIsInsideTabBar: PropTypes.bool,
@@ -193,7 +196,7 @@ function KeyboardAwareHOC(
       enableOnAndroid: PropTypes.bool,
       innerRef: PropTypes.func,
       ...keyboardEventPropTypes
-    }
+    };
 
     // HOC options are used to init default props, so that these options can be overriden with component props
     static defaultProps = {
@@ -204,50 +207,50 @@ function KeyboardAwareHOC(
       keyboardOpeningTime: hocOptions.keyboardOpeningTime,
       viewIsInsideTabBar: hocOptions.viewIsInsideTabBar,
       enableOnAndroid: hocOptions.enableOnAndroid
-    }
+    };
 
     constructor(props: KeyboardAwareHOCProps) {
-      super(props)
+      super(props);
       // @ts-ignore
-      this.keyboardWillShowEvent = undefined
+      this.keyboardWillShowEvent = undefined;
       // @ts-ignore
-      this.keyboardWillHideEvent = undefined
+      this.keyboardWillHideEvent = undefined;
       // @ts-ignore
-      this.callbacks = {}
-      this.position = { x: 0, y: 0 }
+      this.callbacks = {};
+      this.position = { x: 0, y: 0 };
       // @ts-ignore
-      this.defaultResetScrollToCoords = null
+      this.defaultResetScrollToCoords = null;
       const keyboardSpace: number = props.viewIsInsideTabBar
         ? _KAM_DEFAULT_TAB_BAR_HEIGHT
-        : 0
-      this.state = { keyboardSpace }
+        : 0;
+      this.state = { keyboardSpace };
     }
 
     componentDidMount() {
-      this.mountedComponent = true
+      this.mountedComponent = true;
       // Keyboard events
-      if (Platform.OS === 'ios') {
+      if (Platform.OS === "ios") {
         this.keyboardWillShowEvent = Keyboard.addListener(
-          'keyboardWillShow',
+          "keyboardWillShow",
           this._updateKeyboardSpace
-        )
+        );
         this.keyboardWillHideEvent = Keyboard.addListener(
-          'keyboardWillHide',
+          "keyboardWillHide",
           this._resetKeyboardSpace
-        )
-      } else if (Platform.OS === 'android' && this.props.enableOnAndroid) {
+        );
+      } else if (Platform.OS === "android" && this.props.enableOnAndroid) {
         this.keyboardWillShowEvent = Keyboard.addListener(
-          'keyboardDidShow',
+          "keyboardDidShow",
           this._updateKeyboardSpace
-        )
+        );
         this.keyboardWillHideEvent = Keyboard.addListener(
-          'keyboardDidHide',
+          "keyboardDidHide",
           this._resetKeyboardSpace
-        )
+        );
       }
 
       supportedKeyboardEvents.forEach((eventName: string) => {
-        const callbackName = keyboardEventToCallbackName(eventName)
+        const callbackName = keyboardEventToCallbackName(eventName);
         // @ts-ignore
         if (this.props[callbackName]) {
           // @ts-ignore
@@ -256,33 +259,33 @@ function KeyboardAwareHOC(
             eventName,
             // @ts-ignore
             this.props[callbackName]
-          )
+          );
         }
-      })
+      });
     }
 
     componentWillReceiveProps(nextProps: KeyboardAwareHOCProps) {
       if (nextProps.viewIsInsideTabBar !== this.props.viewIsInsideTabBar) {
         const keyboardSpace: number = nextProps.viewIsInsideTabBar
           ? _KAM_DEFAULT_TAB_BAR_HEIGHT
-          : 0
+          : 0;
         if (this.state.keyboardSpace !== keyboardSpace) {
-          this.setState({ keyboardSpace })
+          this.setState({ keyboardSpace });
         }
       }
     }
 
     componentWillUnmount() {
-      this.mountedComponent = false
-          // @ts-ignore
-      this.keyboardWillShowEvent && this.keyboardWillShowEvent.remove()
-          // @ts-ignore
-      this.keyboardWillHideEvent && this.keyboardWillHideEvent.remove()
-          // @ts-ignore
+      this.mountedComponent = false;
+      // @ts-ignore
+      this.keyboardWillShowEvent && this.keyboardWillShowEvent.remove();
+      // @ts-ignore
+      this.keyboardWillHideEvent && this.keyboardWillHideEvent.remove();
+      // @ts-ignore
       Object.values(this.callbacks).forEach((callback: Object) =>
-          // @ts-ignore
+        // @ts-ignore
         callback.remove()
-      )
+      );
     }
 
     getScrollResponder = () => {
@@ -290,22 +293,22 @@ function KeyboardAwareHOC(
         this._rnkasv_keyboardView &&
         this._rnkasv_keyboardView.current._component &&
         this._rnkasv_keyboardView.current._component.getScrollResponder()
-      )
-    }
+      );
+    };
 
     scrollToPosition = (x: number, y: number, animated: boolean = true) => {
-      const responder = this.getScrollResponder()
-      responder && responder.scrollResponderScrollTo({ x, y, animated })
-    }
+      const responder = this.getScrollResponder();
+      responder && responder.scrollResponderScrollTo({ x, y, animated });
+    };
 
     scrollToEnd = (animated: boolean = true) => {
-      const responder = this.getScrollResponder()
-      responder && responder.scrollResponderScrollToEnd({ animated })
-    }
+      const responder = this.getScrollResponder();
+      responder && responder.scrollResponderScrollToEnd({ animated });
+    };
 
     scrollForExtraHeightOnAndroid = (extraHeight: number) => {
-      this.scrollToPosition(0, this.position.y + extraHeight, true)
-    }
+      this.scrollToPosition(0, this.position.y + extraHeight, true);
+    };
 
     /**
      * @param keyboardOpeningTime: takes a different keyboardOpeningTime in consideration.
@@ -317,25 +320,25 @@ function KeyboardAwareHOC(
       keyboardOpeningTime?: number
     ) => {
       if (extraHeight === undefined) {
-        extraHeight = this.props.extraHeight || 0
+        extraHeight = this.props.extraHeight || 0;
       }
       if (keyboardOpeningTime === undefined) {
-        keyboardOpeningTime = this.props.keyboardOpeningTime || 0
+        keyboardOpeningTime = this.props.keyboardOpeningTime || 0;
       }
       const extraOffset = isIphoneX() ? 250 : 200;
       setTimeout(() => {
         if (!this.mountedComponent) {
-          return
+          return;
         }
-        const responder = this.getScrollResponder()
+        const responder = this.getScrollResponder();
         responder &&
           responder.scrollResponderScrollNativeHandleToKeyboard(
             reactNode,
             extraOffset,
             true
-          )
-      }, keyboardOpeningTime)
-    }
+          );
+      }, keyboardOpeningTime);
+    };
 
     scrollIntoView = async (
       // @ts-ignore
@@ -343,23 +346,23 @@ function KeyboardAwareHOC(
       options: ScrollIntoViewOptions = {}
     ) => {
       if (!this._rnkasv_keyboardView || !element) {
-        return
+        return;
       }
 
       const [parentLayout, childLayout] = await Promise.all([
         this._measureElement(this._rnkasv_keyboardView),
         this._measureElement(element)
-      ])
+      ]);
 
       const getScrollPosition =
-        options.getScrollPosition || this._defaultGetScrollPosition
+        options.getScrollPosition || this._defaultGetScrollPosition;
       const { x, y, animated } = getScrollPosition(
         parentLayout,
         childLayout,
         this.position
-      )
-      this.scrollToPosition(x, y, animated)
-    }
+      );
+      this.scrollToPosition(x, y, animated);
+    };
 
     _defaultGetScrollPosition = (
       parentLayout: ElementLayout,
@@ -370,22 +373,22 @@ function KeyboardAwareHOC(
         x: 0,
         y: Math.max(0, childLayout.y - parentLayout.y + contentOffset.y),
         animated: true
-      }
-    }
+      };
+    };
 
     // @ts-ignore
     _measureElement = (element): Promise<ElementLayout> => {
-      const node = findNodeHandle(element)
-      return new Promise((resolve) => {
+      const node = findNodeHandle(element);
+      return new Promise(resolve => {
         UIManager.measureInWindow(
           // @ts-ignore
           node,
           (x: number, y: number, width: number, height: number) => {
-            resolve({ x, y, width, height })
+            resolve({ x, y, width, height });
           }
-        )
-      })
-    }
+        );
+      });
+    };
 
     // Keyboard actions
     _updateKeyboardSpace = (frames: Object) => {
@@ -393,15 +396,15 @@ function KeyboardAwareHOC(
       if (this.props.enableAutomaticScroll) {
         let keyboardSpace: number =
           // @ts-ignore
-          frames.endCoordinates.height + this.props.extraScrollHeight
+          frames.endCoordinates.height + this.props.extraScrollHeight;
         if (this.props.viewIsInsideTabBar) {
-          keyboardSpace -= _KAM_DEFAULT_TAB_BAR_HEIGHT
+          keyboardSpace -= _KAM_DEFAULT_TAB_BAR_HEIGHT;
         }
-        this.setState({ keyboardSpace })
-        const currentlyFocusedField = TextInput.State.currentlyFocusedField()
-        const responder = this.getScrollResponder()
+        this.setState({ keyboardSpace });
+        const currentlyFocusedField = TextInput.State.currentlyFocusedField();
+        const responder = this.getScrollResponder();
         if (!currentlyFocusedField || !responder) {
-          return
+          return;
         }
         // @ts-ignore
         UIManager.viewIsDescendantOf(
@@ -413,20 +416,20 @@ function KeyboardAwareHOC(
               UIManager.measureInWindow(
                 currentlyFocusedField,
                 (x: number, y: number, width: number, height: number) => {
-                  const textInputBottomPosition = y + height
-                    // @ts-ignore
-                  const keyboardPosition = frames.endCoordinates.screenY
-                  const totalExtraHeight =
+                  const textInputBottomPosition = y + height;
                   // @ts-ignore
-                    this.props.extraScrollHeight + this.props.extraHeight
-                  if (Platform.OS === 'ios') {
+                  const keyboardPosition = frames.endCoordinates.screenY;
+                  const totalExtraHeight =
+                    // @ts-ignore
+                    this.props.extraScrollHeight + this.props.extraHeight;
+                  if (Platform.OS === "ios") {
                     if (
                       textInputBottomPosition >
                       keyboardPosition - totalExtraHeight
                     ) {
                       this._scrollToFocusedInputWithNodeHandle(
                         currentlyFocusedField
-                      )
+                      );
                     }
                   } else {
                     // On android, the system would scroll the text input just
@@ -437,9 +440,9 @@ function KeyboardAwareHOC(
                       // we should reduce that amount
                       keyboardSpace =
                         keyboardSpace -
-                        (textInputBottomPosition - keyboardPosition)
-                      this.setState({ keyboardSpace })
-                      this.scrollForExtraHeightOnAndroid(totalExtraHeight)
+                        (textInputBottomPosition - keyboardPosition);
+                      this.setState({ keyboardSpace });
+                      this.scrollForExtraHeightOnAndroid(totalExtraHeight);
                     } else if (
                       textInputBottomPosition >
                       keyboardPosition - totalExtraHeight
@@ -447,48 +450,52 @@ function KeyboardAwareHOC(
                       this.scrollForExtraHeightOnAndroid(
                         totalExtraHeight -
                           (keyboardPosition - textInputBottomPosition)
-                      )
+                      );
                     }
                   }
                 }
-              )
+              );
             }
           }
-        )
+        );
       }
       if (!this.props.resetScrollToCoords) {
         if (!this.defaultResetScrollToCoords) {
-          this.defaultResetScrollToCoords = this.position
+          this.defaultResetScrollToCoords = this.position;
         }
       }
-    }
+    };
 
     _resetKeyboardSpace = () => {
       const keyboardSpace: number = this.props.viewIsInsideTabBar
         ? _KAM_DEFAULT_TAB_BAR_HEIGHT
-        : 0
-      this.setState({ keyboardSpace })
+        : 0;
+      this.setState({ keyboardSpace });
       // Reset scroll position after keyboard dismissal
       if (this.props.enableResetScrollToCoords === false) {
         // @ts-ignore
-        this.defaultResetScrollToCoords = null
-        return
+        this.defaultResetScrollToCoords = null;
+        return;
       } else if (this.props.resetScrollToCoords) {
-        this.scrollToPosition(this.props.resetScrollToCoords.x, this.props.resetScrollToCoords.y, true)
+        this.scrollToPosition(
+          this.props.resetScrollToCoords.x,
+          this.props.resetScrollToCoords.y,
+          true
+        );
       } else {
         if (this.defaultResetScrollToCoords) {
           this.scrollToPosition(
             this.defaultResetScrollToCoords.x,
             this.defaultResetScrollToCoords.y,
             true
-          )
+          );
           // @ts-ignore
-          this.defaultResetScrollToCoords = null
+          this.defaultResetScrollToCoords = null;
         } else {
-          this.scrollToPosition(0, 0, true)
+          this.scrollToPosition(0, 0, true);
         }
       }
-    }
+    };
 
     _scrollToFocusedInputWithNodeHandle = (
       nodeID: number,
@@ -496,9 +503,9 @@ function KeyboardAwareHOC(
       keyboardOpeningTime?: number
     ) => {
       if (extraHeight === undefined) {
-        extraHeight = this.props.extraHeight
+        extraHeight = this.props.extraHeight;
       }
-      const reactNode = findNodeHandle(nodeID)
+      const reactNode = findNodeHandle(nodeID);
       this.scrollToFocusedInput(
         reactNode,
         // @ts-ignore
@@ -506,51 +513,52 @@ function KeyboardAwareHOC(
         keyboardOpeningTime !== undefined
           ? keyboardOpeningTime
           : this.props.keyboardOpeningTime || 0
-      )
-    }
+      );
+    };
 
     _handleOnScroll = (
       // @ts-ignore
       e
     ) => {
-      this.position = e.nativeEvent.contentOffset
-    }
+      this.position = e.nativeEvent.contentOffset;
+      if (this.props.onScroll) this.props.onScroll(e);
+    };
 
     // @ts-ignore
-    _handleRef = (ref) => {
-      this._rnkasv_keyboardView = ref ? hocOptions.extractNativeRef(ref) : ref
+    _handleRef = ref => {
+      this._rnkasv_keyboardView = ref ? hocOptions.extractNativeRef(ref) : ref;
       if (this.props.innerRef) {
-        this.props.innerRef(this._rnkasv_keyboardView)
+        this.props.innerRef(this._rnkasv_keyboardView);
       }
-    }
+    };
 
     update = () => {
-      const currentlyFocusedField = TextInput.State.currentlyFocusedField()
-      const responder = this.getScrollResponder()
+      const currentlyFocusedField = TextInput.State.currentlyFocusedField();
+      const responder = this.getScrollResponder();
 
       if (!currentlyFocusedField || !responder) {
-        return
+        return;
       }
 
-      this._scrollToFocusedInputWithNodeHandle(currentlyFocusedField)
-    }
+      this._scrollToFocusedInputWithNodeHandle(currentlyFocusedField);
+    };
 
     render() {
-      const { enableOnAndroid, contentContainerStyle, onScroll } = this.props
-      let newContentContainerStyle
-      if (Platform.OS === 'android' && enableOnAndroid) {
+      const { enableOnAndroid, contentContainerStyle, onScroll } = this.props;
+      let newContentContainerStyle;
+      if (Platform.OS === "android" && enableOnAndroid) {
         newContentContainerStyle = [].concat(contentContainerStyle).concat({
           // @ts-ignore
           paddingBottom:
             ((contentContainerStyle || {}).paddingBottom || 0) +
             this.state.keyboardSpace
-        })
+        });
       }
-      const refProps = { onRef: this._handleRef }
+      const refProps = { onRef: this._handleRef };
       return (
         <ScrollableComponent
           {...refProps}
-          keyboardDismissMode='interactive'
+          keyboardDismissMode="interactive"
           contentInset={{ bottom: this.state.keyboardSpace }}
           automaticallyAdjustContentInsets={false}
           showsVerticalScrollIndicator={true}
@@ -572,21 +580,21 @@ function KeyboardAwareHOC(
           // @ts-ignore
           onScroll={Animated.forkEvent(onScroll, this._handleOnScroll)}
         />
-      )
+      );
     }
-  }
+  };
 }
 
 // Allow to pass options, without breaking change, and curried for composition
 // listenToKeyboardEvents(ScrollView);
 // listenToKeyboardEvents(options)(Comp);
 const listenToKeyboardEvents = (configOrComp: any) => {
-  if (typeof configOrComp === 'object') {
-    return (Comp: Function) => KeyboardAwareHOC(Comp, configOrComp)
+  if (typeof configOrComp === "object") {
+    return (Comp: Function) => KeyboardAwareHOC(Comp, configOrComp);
   } else {
     // @ts-ignore
-    return KeyboardAwareHOC(configOrComp)
+    return KeyboardAwareHOC(configOrComp);
   }
-}
+};
 
-export default listenToKeyboardEvents
+export default listenToKeyboardEvents;
