@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Platform,
+  ScrollView,
   StyleSheet,
   FlatListProps,
   findNodeHandle,
@@ -420,6 +421,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
 
     const anim = setupCell(
       currentIndex,
+      // @ts-ignore
       initialized,
       size,
       offset,
@@ -996,7 +998,13 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
 const DraggableKeyboardAwareFlatList = listenToKeyboardEvents(
   DraggableFlatList
 );
-export { DraggableFlatList, DraggableKeyboardAwareFlatList };
+// Jupiter custom offsets and functions
+const KeyboardAwareScrollView = listenToKeyboardEvents(ScrollView);
+export {
+  DraggableFlatList,
+  DraggableKeyboardAwareFlatList,
+  KeyboardAwareScrollView
+};
 
 type RowItemProps<T> = {
   extraData?: any;
