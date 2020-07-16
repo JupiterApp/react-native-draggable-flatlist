@@ -20,7 +20,7 @@ import Animated from "react-native-reanimated";
 import { springFill, setupCell } from "./procs";
 import listenToKeyboardEvents from "./KeyboardAware";
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const AnimatedFlatList = Animated.createAnimatedComponent(RNFlatList);
 
 const {
   Value,
