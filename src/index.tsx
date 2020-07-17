@@ -120,6 +120,7 @@ type Props<T> = Modify<
 type State = {
   activeKey: string | null;
   hoverComponent: React.ReactNode | null;
+  hoverIndex: number;
 };
 
 type CellData = {
@@ -146,7 +147,8 @@ function onNextFrame(callback: () => void) {
 class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   state: State = {
     activeKey: null,
-    hoverComponent: null
+    hoverComponent: null,
+    hoverIndex: -1
   };
 
   containerRef = React.createRef<Animated.View>();
@@ -803,7 +805,13 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
                   this.containerOffset
                 )
               ),
-              onChange(this.touchAbsolute, this.checkAutoscroll)
+              onChange(this.touchAbsolute, this.checkAutoscroll),
+              onChange(
+                this.spacerIndex,
+                Animated.call([this.spacerIndex], (...args) =>
+                  this.updateSpacerIndex(...args)
+                )
+              )
             ]
           )
         ])
@@ -924,6 +932,12 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     this.isPressedIn.native.setValue(0);
   };
 
+  updateSpacerIndex(index) {
+    this.setState({
+      hoverIndex: index
+    });
+  }
+
   render() {
     const {
       scrollEnabled,
@@ -934,7 +948,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       dropzoneComponent: Dropzone,
       dropzoneProps
     } = this.props;
-    const { hoverComponent } = this.state;
+    const { hoverComponent, hoverIndex } = this.state;
     let dynamicProps = {};
     if (activationDistance) {
       const activeOffset = [-activationDistance, activationDistance];
@@ -942,6 +956,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
         ? { activeOffsetX: activeOffset }
         : { activeOffsetY: activeOffset };
     }
+
     return (
       <PanGestureHandler
         ref={this.panGestureHandlerRef}
@@ -967,7 +982,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
                 opacity: hoverComponent ? 1 : 0
               }}
             >
-              <Dropzone {...dropzoneProps} />
+              <Dropzone position={hoverIndex} {...dropzoneProps} />
             </Animated.View>
           )}
           <AnimatedFlatList
