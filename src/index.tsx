@@ -112,6 +112,8 @@ type Props<T> = Modify<
     debug?: boolean;
     layoutInvalidationKey?: string;
     onScrollOffsetChange?: (scrollOffset: number) => void;
+    dropzoneComponent?: React.ReactNode;
+    dropzoneProps?: object;
   } & Partial<DefaultProps>
 >;
 
@@ -929,6 +931,8 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       horizontal,
       activationDistance,
       onScrollOffsetChange
+      dropzoneComponent: Dropzone,
+      dropzoneProps
     } = this.props;
     const { hoverComponent } = this.state;
     let dynamicProps = {};
@@ -951,6 +955,21 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           onLayout={this.onContainerLayout}
           onTouchEnd={this.onContainerTouchEnd}
         >
+          {Dropzone && (
+            <Animated.View
+              style={{
+                width: horizontal ? this.activeCellSize : "100%",
+                height: horizontal ? "100%" : this.activeCellSize,
+                position: "absolute",
+                transform: [
+                  { [`translate${horizontal ? "X" : "Y"}`]: this.hoverTo }
+                ],
+                opacity: hoverComponent ? 1 : 0
+              }}
+            >
+              <Dropzone {...dropzoneProps} />
+            </Animated.View>
+          )}
           <AnimatedFlatList
             {...this.props}
             CellRendererComponent={this.CellRendererComponent}
