@@ -48,6 +48,7 @@ const {
   stopClock,
   spring,
   defined,
+  min,
   max,
   debug
 } = Animated;
@@ -150,6 +151,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   flatlistRef = React.createRef<AnimatedFlatListType<T>>();
   panGestureHandlerRef = React.createRef<PanGestureHandler>();
 
+  containerOffset = new Value<number>(0);
   containerSize = new Value<number>(0);
 
   activationDistance = new Value<number>(0);
@@ -558,6 +560,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     const containerRef = this.containerRef.current;
     if (containerRef) {
       containerRef.getNode().measure((x, y, w, h) => {
+        this.containerOffset.setValue(horizontal ? x : y);
         this.containerSize.setValue(horizontal ? w : h);
       });
     }
@@ -779,20 +782,29 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   onPanGestureEvent = event([
     {
       nativeEvent: ({ x, y }: PanGestureHandlerEventExtra) =>
-        cond(
-          and(
-            this.isHovering,
-            eq(this.panGestureState, GestureState.ACTIVE),
-            not(this.disabled)
-          ),
-          [
-            cond(not(this.hasMoved), set(this.hasMoved, 1)),
-            set(
-              this.touchAbsolute,
-              add(this.props.horizontal ? x : y, this.activationDistance)
-            )
-          ]
-        )
+        block([
+          cond(
+            and(
+              this.isHovering,
+              eq(this.panGestureState, GestureState.ACTIVE),
+              not(this.disabled)
+            ),
+            [
+              cond(not(this.hasMoved), set(this.hasMoved, 1)),
+              set(
+                this.touchAbsolute,
+                max(
+                  min(
+                    add(this.props.horizontal ? x : y, this.activationDistance),
+                    add(this.containerOffset, this.containerSize)
+                  ),
+                  this.containerOffset
+                )
+              ),
+              onChange(this.touchAbsolute, this.checkAutoscroll)
+            ]
+          )
+        ])
     }
   ]);
 
