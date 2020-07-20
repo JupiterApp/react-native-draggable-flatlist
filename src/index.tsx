@@ -93,6 +93,7 @@ export type RenderItemParams<T> = {
   index?: number; // This is technically a "last known index" since cells don't necessarily rerender when their index changes
   drag: () => void;
   isActive: boolean;
+  separators: any;
 };
 
 type Modify<T, R> = Omit<T, keyof R> & R;
@@ -860,7 +861,15 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     );
   };
 
-  renderItem = ({ item, index }: { item: T; index: number }) => {
+  renderItem = ({
+    item,
+    index,
+    separators
+  }: {
+    item: T;
+    index: number;
+    separators: any;
+  }) => {
     const key = this.keyExtractor(item, index);
     if (index !== this.keyToIndex.get(key)) this.keyToIndex.set(key, index);
     const { renderItem } = this.props;
@@ -877,6 +886,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
         item={item}
         drag={this.drag}
         onUnmount={onUnmount}
+        separators={separators}
       />
     );
   };
@@ -1060,16 +1070,26 @@ type RowItemProps<T> = {
   renderItem: (params: RenderItemParams<T>) => React.ReactNode;
   itemKey: string;
   onUnmount: () => void;
+  separators: any;
 };
 
 class RowItem<T> extends React.PureComponent<RowItemProps<T>> {
   drag = () => {
-    const { drag, renderItem, item, keyToIndex, itemKey } = this.props;
+    const {
+      drag,
+      renderItem,
+      item,
+      keyToIndex,
+      itemKey,
+      separators
+    } = this.props;
     const hoverComponent = renderItem({
       isActive: true,
       item,
       index: keyToIndex.get(itemKey),
-      drag: () => console.log("## attempt to call drag() on hovering component")
+      drag: () =>
+        console.log("## attempt to call drag() on hovering component"),
+      separators
     });
     drag(hoverComponent, itemKey);
   };
@@ -1079,12 +1099,13 @@ class RowItem<T> extends React.PureComponent<RowItemProps<T>> {
   }
 
   render() {
-    const { renderItem, item, keyToIndex, itemKey } = this.props;
+    const { renderItem, item, keyToIndex, itemKey, separators } = this.props;
     return renderItem({
       isActive: false,
       item,
       index: keyToIndex.get(itemKey),
-      drag: this.drag
+      drag: this.drag,
+      separators
     });
   }
 }
