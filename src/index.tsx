@@ -50,7 +50,8 @@ const {
   defined,
   min,
   max,
-  debug
+  debug,
+  lessThan
 } = Animated;
 
 // Fire onScrollComplete when within this many
@@ -115,6 +116,7 @@ type Props<T> = Modify<
     onScrollOffsetChange?: (scrollOffset: number) => void;
     dropzoneComponent?: React.ReactNode;
     dropzoneProps?: object;
+    dividerIndex?: number;
   } & Partial<DefaultProps>
 >;
 
@@ -189,6 +191,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   hoverMid = add(this.hoverAnim, divide(this.activeCellSize, 2));
   hoverOffset = add(this.hoverAnim, this.scrollOffset);
 
+  dividerIndex = new Value<number>(-1);
+  dividerBaseOffset = new Value<number>(-1);
+  dividerHeight = new Value<number>(-1);
+
   hoverTo = new Value(0);
   hoverClock = new Clock();
   hoverAnimState = {
@@ -259,6 +265,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       this.keyToIndex.set(key, index);
     });
     onRef && onRef(this.flatlistRef);
+    this.dividerIndex.setValue(new Value<number>(this.props.dividerIndex));
   }
 
   dataKeysHaveChanged = (a: T[], b: T[]) => {
@@ -522,6 +529,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           cellData.offset.setValue(offset);
           cellData.measurements.size = size;
           cellData.measurements.offset = offset;
+          if (thisKeyIndex === this.props.dividerIndex) {
+            this.dividerBaseOffset.setValue(baseOffset);
+            this.dividerHeight.setValue(add(baseOffset, this.scrollOffset));
+          }
         }
 
         // remeasure on next layout if hovering
@@ -703,6 +714,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
             this.scrollOffset,
             this.props.horizontal ? contentOffset.x : contentOffset.y
           ),
+          set(
+            this.dividerHeight,
+            sub(this.dividerBaseOffset, this.scrollOffset)
+          ),
           cond(
             and(
               this.isAutoscrolling.native,
@@ -784,6 +799,29 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     }
   ]);
 
+  minDraggableBound = cond(
+    greaterThan(this.dividerHeight, -1),
+    cond(
+      lessThan(this.activeIndex, this.dividerIndex),
+      add(
+        40,
+        add(this.containerOffset, sub(this.dividerHeight, this.activeCellSize))
+      ),
+      add(this.containerOffset, this.containerSize)
+    ),
+    add(this.containerOffset, this.containerSize)
+  );
+
+  maxDraggableBound = cond(
+    greaterThan(this.dividerHeight, -1),
+    cond(
+      greaterOrEq(this.activeIndex, this.dividerIndex),
+      add(40, sub(this.dividerHeight, this.containerOffset)),
+      this.containerOffset
+    ),
+    this.containerOffset
+  );
+
   onPanGestureEvent = event([
     {
       nativeEvent: ({ x, y }: PanGestureHandlerEventExtra) =>
@@ -801,9 +839,9 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
                 max(
                   min(
                     add(this.props.horizontal ? x : y, this.activationDistance),
-                    add(this.containerOffset, this.containerSize)
+                    this.minDraggableBound
                   ),
-                  this.containerOffset
+                  this.maxDraggableBound
                 )
               ),
               onChange(this.touchAbsolute, this.checkAutoscroll),
