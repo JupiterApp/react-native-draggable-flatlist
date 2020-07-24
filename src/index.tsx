@@ -265,7 +265,8 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       this.keyToIndex.set(key, index);
     });
     onRef && onRef(this.flatlistRef);
-    this.dividerIndex.setValue(new Value<number>(this.props.dividerIndex));
+    if (this.props.dividerIndex)
+      this.dividerIndex.setValue(new Value<number>(this.props.dividerIndex));
   }
 
   dataKeysHaveChanged = (a: T[], b: T[]) => {
