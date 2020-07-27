@@ -800,27 +800,31 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     }
   ]);
 
+  // distance cell can be dragged down (smaller values mean higher up)
   minDraggableBound = cond(
     greaterThan(this.dividerHeight, -1),
     cond(
       lessThan(this.activeIndex, this.dividerIndex),
-      add(
-        40,
-        add(this.containerOffset, sub(this.dividerHeight, this.activeCellSize))
-      ),
-      add(this.containerOffset, this.containerSize)
+      add(this.containerOffset, sub(this.dividerHeight, this.activeCellSize)), // above the divider
+      add(this.containerOffset, this.containerSize) // below the divider
     ),
-    add(this.containerOffset, this.containerSize)
+    // no divider:
+    sub(
+      sub(add(this.containerOffset, this.containerSize), this.activeCellSize),
+      40
+    )
   );
 
+  // distance cell can be dragged up (smaller values mean higher up)
   maxDraggableBound = cond(
     greaterThan(this.dividerHeight, -1),
     cond(
-      greaterOrEq(this.activeIndex, this.dividerIndex),
-      add(40, sub(this.dividerHeight, this.containerOffset)),
-      this.containerOffset
+      lessThan(this.activeIndex, this.dividerIndex),
+      this.containerOffset, // above the divider
+      add(this.containerOffset, this.dividerHeight) // below the divider
     ),
-    this.containerOffset
+    // no divider:
+    sub(this.containerOffset, this.activeCellSize)
   );
 
   onPanGestureEvent = event([
@@ -993,7 +997,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       debug,
       horizontal,
       activationDistance,
-      onScrollOffsetChange
+      onScrollOffsetChange,
       dropzoneComponent: Dropzone,
       dropzoneProps
     } = this.props;
