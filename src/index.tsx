@@ -985,7 +985,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     this.isPressedIn.native.setValue(0);
   };
 
-  updateSpacerIndex(index) {
+  updateSpacerIndex(index: any) {
     this.setState({
       hoverIndex: index
     });
@@ -1023,21 +1023,21 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           onLayout={this.onContainerLayout}
           onTouchEnd={this.onContainerTouchEnd}
         >
-          {Dropzone && (
+          {Dropzone ? (
             <Animated.View
               style={{
                 width: horizontal ? this.activeCellSize : "100%",
                 height: horizontal ? "100%" : this.activeCellSize,
                 position: "absolute",
-                transform: [
-                  { [`translate${horizontal ? "X" : "Y"}`]: this.hoverTo }
-                ],
+                transform: [{ translateY: this.hoverTo }],
                 opacity: hoverComponent ? 1 : 0
               }}
             >
+              {/*
+                // @ts-ignore */}
               <Dropzone position={hoverIndex} {...dropzoneProps} />
             </Animated.View>
-          )}
+          ) : null}
           <AnimatedFlatList
             {...this.props}
             CellRendererComponent={this.CellRendererComponent}
