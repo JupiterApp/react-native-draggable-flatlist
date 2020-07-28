@@ -71,7 +71,8 @@ const defaultProps = {
   autoscrollSpeed: 100,
   animationConfig: defaultAnimationConfig as Animated.SpringConfig,
   scrollEnabled: true,
-  activationDistance: 0
+  activationDistance: 0,
+  nested: false
 };
 
 type DefaultProps = Readonly<typeof defaultProps>;
@@ -117,6 +118,7 @@ type Props<T> = Modify<
     dropzoneComponent?: React.ReactNode;
     dropzoneProps?: object;
     dividerIndex?: number;
+    nested?: boolean;
   } & Partial<DefaultProps>
 >;
 
@@ -809,10 +811,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       add(this.containerOffset, this.containerSize) // below the divider
     ),
     // no divider:
-    sub(
-      sub(add(this.containerOffset, this.containerSize), this.activeCellSize),
-      40
-    )
+    sub(this.containerSize, this.activeCellSize)
   );
 
   // distance cell can be dragged up (smaller values mean higher up)
@@ -824,7 +823,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       add(this.containerOffset, this.dividerHeight) // below the divider
     ),
     // no divider:
-    sub(this.containerOffset, this.activeCellSize)
+    0
   );
 
   onPanGestureEvent = event([
@@ -999,12 +998,15 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       activationDistance,
       onScrollOffsetChange,
       dropzoneComponent: Dropzone,
-      dropzoneProps
+      dropzoneProps,
+      nested
     } = this.props;
     const { hoverComponent, hoverIndex } = this.state;
     let dynamicProps = {};
     if (activationDistance) {
-      const activeOffset = [-activationDistance, activationDistance];
+      const distanceToActivate =
+        nested && hoverComponent ? 0 : activationDistance;
+      const activeOffset = [-distanceToActivate, distanceToActivate];
       dynamicProps = horizontal
         ? { activeOffsetX: activeOffset }
         : { activeOffsetY: activeOffset };
