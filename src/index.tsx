@@ -107,7 +107,7 @@ type Props<T> = Modify<
     data: T[];
     onRef?: (ref: React.RefObject<AnimatedFlatListType<T>>) => void;
     onDragBegin?: (index: number) => void;
-    onRelease?: (index: number) => void;
+    onRelease?: (index: number, hasMoved: boolean) => void;
     onDragEnd?: (params: DragEndParams<T>) => void;
     renderItem: (params: RenderItemParams<T>) => React.ReactNode;
     animationConfig: Partial<Animated.SpringConfig>;
@@ -360,10 +360,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     }
   };
 
-  onRelease = ([index]: readonly number[]) => {
+  onRelease = ([index, hasMoved]: readonly number[]) => {
     const { onRelease } = this.props;
     this.isPressedIn.js = false;
-    onRelease && onRelease(index);
+    onRelease && onRelease(index, !!hasMoved);
   };
 
   onDragEnd = ([from, to]: readonly number[]) => {
@@ -763,7 +763,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           startClock(this.hoverClock)
         ]),
         [
-          call([this.activeIndex], this.onRelease),
+          call([this.activeIndex, this.hasMoved], this.onRelease),
           cond(
             not(this.hasMoved),
             call([this.activeIndex], this.resetHoverState)
@@ -851,8 +851,8 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
               onChange(this.touchAbsolute, this.checkAutoscroll),
               onChange(
                 this.spacerIndex,
-                Animated.call([this.spacerIndex], (...args) =>
-                  this.updateSpacerIndex(...args)
+                Animated.call([this.spacerIndex], ([index]) =>
+                  this.updateSpacerIndex(index)
                 )
               )
             ]
