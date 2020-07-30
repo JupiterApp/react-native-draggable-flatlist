@@ -47,6 +47,10 @@ All props are spread onto underlying [FlatList](https://facebook.github.io/react
 | `activationDistance`    | `number`                                                                                  | Distance a finger must travel before the gesture handler activates. Useful when using a draggable list within a TabNavigator so that the list does not capture navigator gestures. |
 | `layoutInvalidationKey` | `string`                                                                                  | Changing this value forces a remeasure of all item layouts. Useful if item size/ordering updates after initial mount.                                                              |
 | `onScrollOffsetChange`  | `(offset: number) => void`                                                                | Called with scroll offset. Stand-in for `onScroll`.                                                                                                                                |
+| `dropzoneComponent`  | `React Component`                                                                | The component which translates into the position that the hovering component will drop into.                                                                                                                                |
+| `dropzoneProps`  | `Object`                                                                | An object literal with props to be passed to the dropzone component.                                                                                                                                |
+| `dividerIndex`  | `number`                                                                | The index of a location where components should not be able to pass through; ie `3` would prevent the third item in the list from moving down, or the 4th from moving up.   |
+
 
 ## Example
 

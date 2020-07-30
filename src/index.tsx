@@ -17,10 +17,10 @@ import {
   PanGestureHandlerEventExtra
 } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { getOnCellTap, springFill, setupCell } from "./procs";
+import { springFill, setupCell } from "./procs";
 import listenToKeyboardEvents from "./KeyboardAware";
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const AnimatedFlatList = Animated.createAnimatedComponent(RNFlatList);
 
 const {
   Value,
@@ -48,8 +48,10 @@ const {
   stopClock,
   spring,
   defined,
+  min,
   max,
-  debug
+  debug,
+  lessThan
 } = Animated;
 
 // Fire onScrollComplete when within this many
@@ -69,7 +71,8 @@ const defaultProps = {
   autoscrollSpeed: 100,
   animationConfig: defaultAnimationConfig as Animated.SpringConfig,
   scrollEnabled: true,
-  activationDistance: 0
+  activationDistance: 0,
+  nested: false
 };
 
 type DefaultProps = Readonly<typeof defaultProps>;
@@ -92,6 +95,7 @@ export type RenderItemParams<T> = {
   index?: number; // This is technically a "last known index" since cells don't necessarily rerender when their index changes
   drag: () => void;
   isActive: boolean;
+  separators: any;
 };
 
 type Modify<T, R> = Omit<T, keyof R> & R;
@@ -103,7 +107,7 @@ type Props<T> = Modify<
     data: T[];
     onRef?: (ref: React.RefObject<AnimatedFlatListType<T>>) => void;
     onDragBegin?: (index: number) => void;
-    onRelease?: (index: number) => void;
+    onRelease?: (index: number, hasMoved: boolean) => void;
     onDragEnd?: (params: DragEndParams<T>) => void;
     renderItem: (params: RenderItemParams<T>) => React.ReactNode;
     animationConfig: Partial<Animated.SpringConfig>;
@@ -111,12 +115,17 @@ type Props<T> = Modify<
     debug?: boolean;
     layoutInvalidationKey?: string;
     onScrollOffsetChange?: (scrollOffset: number) => void;
+    dropzoneComponent?: React.ReactNode;
+    dropzoneProps?: object;
+    dividerIndex?: number;
+    nested?: boolean;
   } & Partial<DefaultProps>
 >;
 
 type State = {
   activeKey: string | null;
   hoverComponent: React.ReactNode | null;
+  hoverIndex: number;
 };
 
 type CellData = {
@@ -143,13 +152,15 @@ function onNextFrame(callback: () => void) {
 class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   state: State = {
     activeKey: null,
-    hoverComponent: null
+    hoverComponent: null,
+    hoverIndex: -1
   };
 
   containerRef = React.createRef<Animated.View>();
   flatlistRef = React.createRef<AnimatedFlatListType<T>>();
   panGestureHandlerRef = React.createRef<PanGestureHandler>();
 
+  containerOffset = new Value<number>(0);
   containerSize = new Value<number>(0);
 
   activationDistance = new Value<number>(0);
@@ -181,6 +192,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   hoverAnim = sub(this.touchAbsolute, this.touchCellOffset);
   hoverMid = add(this.hoverAnim, divide(this.activeCellSize, 2));
   hoverOffset = add(this.hoverAnim, this.scrollOffset);
+
+  dividerIndex = new Value<number>(-1);
+  dividerBaseOffset = new Value<number>(-1);
+  dividerHeight = new Value<number>(-1);
 
   hoverTo = new Value(0);
   hoverClock = new Clock();
@@ -252,6 +267,8 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       this.keyToIndex.set(key, index);
     });
     onRef && onRef(this.flatlistRef);
+    if (this.props.dividerIndex)
+      this.dividerIndex.setValue(new Value<number>(this.props.dividerIndex));
   }
 
   dataKeysHaveChanged = (a: T[], b: T[]) => {
@@ -343,10 +360,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     }
   };
 
-  onRelease = ([index]: readonly number[]) => {
+  onRelease = ([index, hasMoved]: readonly number[]) => {
     const { onRelease } = this.props;
     this.isPressedIn.js = false;
-    onRelease && onRelease(index);
+    onRelease && onRelease(index, !!hasMoved);
   };
 
   onDragEnd = ([from, to]: readonly number[]) => {
@@ -515,6 +532,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           cellData.offset.setValue(offset);
           cellData.measurements.size = size;
           cellData.measurements.offset = offset;
+          if (thisKeyIndex === this.props.dividerIndex) {
+            this.dividerBaseOffset.setValue(baseOffset);
+            this.dividerHeight.setValue(add(baseOffset, this.scrollOffset));
+          }
         }
 
         // remeasure on next layout if hovering
@@ -558,6 +579,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     const containerRef = this.containerRef.current;
     if (containerRef) {
       containerRef.getNode().measure((x, y, w, h) => {
+        this.containerOffset.setValue(horizontal ? x : y);
         this.containerSize.setValue(horizontal ? w : h);
       });
     }
@@ -695,6 +717,10 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
             this.scrollOffset,
             this.props.horizontal ? contentOffset.x : contentOffset.y
           ),
+          set(
+            this.dividerHeight,
+            sub(this.dividerBaseOffset, this.scrollOffset)
+          ),
           cond(
             and(
               this.isAutoscrolling.native,
@@ -737,7 +763,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           startClock(this.hoverClock)
         ]),
         [
-          call([this.activeIndex], this.onRelease),
+          call([this.activeIndex, this.hasMoved], this.onRelease),
           cond(
             not(this.hasMoved),
             call([this.activeIndex], this.resetHoverState)
@@ -776,23 +802,62 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     }
   ]);
 
+  // distance cell can be dragged down (smaller values mean higher up)
+  minDraggableBound = cond(
+    greaterThan(this.dividerHeight, -1),
+    cond(
+      lessThan(this.activeIndex, this.dividerIndex),
+      add(this.containerOffset, sub(this.dividerHeight, this.activeCellSize)), // above the divider
+      add(this.containerOffset, this.containerSize) // below the divider
+    ),
+    // no divider:
+    sub(this.containerSize, this.activeCellSize)
+  );
+
+  // distance cell can be dragged up (smaller values mean higher up)
+  maxDraggableBound = cond(
+    greaterThan(this.dividerHeight, -1),
+    cond(
+      lessThan(this.activeIndex, this.dividerIndex),
+      this.containerOffset, // above the divider
+      add(this.containerOffset, this.dividerHeight) // below the divider
+    ),
+    // no divider:
+    0
+  );
+
   onPanGestureEvent = event([
     {
       nativeEvent: ({ x, y }: PanGestureHandlerEventExtra) =>
-        cond(
-          and(
-            this.isHovering,
-            eq(this.panGestureState, GestureState.ACTIVE),
-            not(this.disabled)
-          ),
-          [
-            cond(not(this.hasMoved), set(this.hasMoved, 1)),
-            set(
-              this.touchAbsolute,
-              add(this.props.horizontal ? x : y, this.activationDistance)
-            )
-          ]
-        )
+        block([
+          cond(
+            and(
+              this.isHovering,
+              eq(this.panGestureState, GestureState.ACTIVE),
+              not(this.disabled)
+            ),
+            [
+              cond(not(this.hasMoved), set(this.hasMoved, 1)),
+              set(
+                this.touchAbsolute,
+                max(
+                  min(
+                    add(this.props.horizontal ? x : y, this.activationDistance),
+                    this.minDraggableBound
+                  ),
+                  this.maxDraggableBound
+                )
+              ),
+              onChange(this.touchAbsolute, this.checkAutoscroll),
+              onChange(
+                this.spacerIndex,
+                Animated.call([this.spacerIndex], ([index]) =>
+                  this.updateSpacerIndex(index)
+                )
+              )
+            ]
+          )
+        ])
     }
   ]);
 
@@ -838,7 +903,15 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     );
   };
 
-  renderItem = ({ item, index }: { item: T; index: number }) => {
+  renderItem = ({
+    item,
+    index,
+    separators
+  }: {
+    item: T;
+    index: number;
+    separators: any;
+  }) => {
     const key = this.keyExtractor(item, index);
     if (index !== this.keyToIndex.get(key)) this.keyToIndex.set(key, index);
     const { renderItem } = this.props;
@@ -855,6 +928,7 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
         item={item}
         drag={this.drag}
         onUnmount={onUnmount}
+        separators={separators}
       />
     );
   };
@@ -910,22 +984,34 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     this.isPressedIn.native.setValue(0);
   };
 
+  updateSpacerIndex(index: any) {
+    this.setState({
+      hoverIndex: index
+    });
+  }
+
   render() {
     const {
       scrollEnabled,
       debug,
       horizontal,
       activationDistance,
-      onScrollOffsetChange
+      onScrollOffsetChange,
+      dropzoneComponent: Dropzone,
+      dropzoneProps,
+      nested
     } = this.props;
-    const { hoverComponent } = this.state;
+    const { hoverComponent, hoverIndex } = this.state;
     let dynamicProps = {};
     if (activationDistance) {
-      const activeOffset = [-activationDistance, activationDistance];
+      const distanceToActivate =
+        nested && hoverComponent ? 0 : activationDistance;
+      const activeOffset = [-distanceToActivate, distanceToActivate];
       dynamicProps = horizontal
         ? { activeOffsetX: activeOffset }
         : { activeOffsetY: activeOffset };
     }
+
     return (
       <PanGestureHandler
         ref={this.panGestureHandlerRef}
@@ -939,6 +1025,21 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           onLayout={this.onContainerLayout}
           onTouchEnd={this.onContainerTouchEnd}
         >
+          {Dropzone ? (
+            <Animated.View
+              style={{
+                width: horizontal ? this.activeCellSize : "100%",
+                height: horizontal ? "100%" : this.activeCellSize,
+                position: "absolute",
+                transform: [{ translateY: this.hoverTo }],
+                opacity: hoverComponent ? 1 : 0
+              }}
+            >
+              {/*
+                // @ts-ignore */}
+              <Dropzone position={hoverIndex} {...dropzoneProps} />
+            </Animated.View>
+          ) : null}
           <AnimatedFlatList
             {...this.props}
             CellRendererComponent={this.CellRendererComponent}
@@ -1014,16 +1115,26 @@ type RowItemProps<T> = {
   renderItem: (params: RenderItemParams<T>) => React.ReactNode;
   itemKey: string;
   onUnmount: () => void;
+  separators: any;
 };
 
 class RowItem<T> extends React.PureComponent<RowItemProps<T>> {
   drag = () => {
-    const { drag, renderItem, item, keyToIndex, itemKey } = this.props;
+    const {
+      drag,
+      renderItem,
+      item,
+      keyToIndex,
+      itemKey,
+      separators
+    } = this.props;
     const hoverComponent = renderItem({
       isActive: true,
       item,
       index: keyToIndex.get(itemKey),
-      drag: () => console.log("## attempt to call drag() on hovering component")
+      drag: () =>
+        console.log("## attempt to call drag() on hovering component"),
+      separators
     });
     drag(hoverComponent, itemKey);
   };
@@ -1033,12 +1144,13 @@ class RowItem<T> extends React.PureComponent<RowItemProps<T>> {
   }
 
   render() {
-    const { renderItem, item, keyToIndex, itemKey } = this.props;
+    const { renderItem, item, keyToIndex, itemKey, separators } = this.props;
     return renderItem({
       isActive: false,
       item,
       index: keyToIndex.get(itemKey),
-      drag: this.drag
+      drag: this.drag,
+      separators
     });
   }
 }
