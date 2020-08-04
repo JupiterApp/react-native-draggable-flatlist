@@ -115,8 +115,6 @@ type Props<T> = Modify<
     debug?: boolean;
     layoutInvalidationKey?: string;
     onScrollOffsetChange?: (scrollOffset: number) => void;
-    dropzoneComponent?: React.ReactNode;
-    dropzoneProps?: object;
     dividerIndex?: number;
     nested?: boolean;
   } & Partial<DefaultProps>
@@ -803,15 +801,19 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
   ]);
 
   // distance cell can be dragged down (smaller values mean higher up)
+  // (the extra pixel is a hack to ensure onDragEnd is called)
   minDraggableBound = cond(
     greaterThan(this.dividerHeight, -1),
     cond(
       lessThan(this.activeIndex, this.dividerIndex),
-      add(this.containerOffset, sub(this.dividerHeight, this.activeCellSize)), // above the divider
-      add(this.containerOffset, this.containerSize) // below the divider
+      add(
+        1,
+        add(this.containerOffset, sub(this.dividerHeight, this.activeCellSize))
+      ), // above the divider
+      add(1, add(this.containerOffset, this.containerSize)) // below the divider
     ),
     // no divider:
-    sub(this.containerSize, this.activeCellSize)
+    add(1, sub(this.containerSize, this.activeCellSize))
   );
 
   // distance cell can be dragged up (smaller values mean higher up)
@@ -997,8 +999,6 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
       horizontal,
       activationDistance,
       onScrollOffsetChange,
-      dropzoneComponent: Dropzone,
-      dropzoneProps,
       nested
     } = this.props;
     const { hoverComponent, hoverIndex } = this.state;
@@ -1025,21 +1025,6 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
           onLayout={this.onContainerLayout}
           onTouchEnd={this.onContainerTouchEnd}
         >
-          {Dropzone ? (
-            <Animated.View
-              style={{
-                width: horizontal ? this.activeCellSize : "100%",
-                height: horizontal ? "100%" : this.activeCellSize,
-                position: "absolute",
-                transform: [{ translateY: this.hoverTo }],
-                opacity: hoverComponent ? 1 : 0
-              }}
-            >
-              {/*
-                // @ts-ignore */}
-              <Dropzone position={hoverIndex} {...dropzoneProps} />
-            </Animated.View>
-          ) : null}
           <AnimatedFlatList
             {...this.props}
             CellRendererComponent={this.CellRendererComponent}
