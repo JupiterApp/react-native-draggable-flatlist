@@ -821,11 +821,11 @@ class DraggableFlatList<T> extends React.Component<Props<T>, State> {
     greaterThan(this.dividerHeight, -1),
     cond(
       lessThan(this.activeIndex, this.dividerIndex),
-      this.containerOffset, // above the divider
-      add(this.containerOffset, this.dividerHeight) // below the divider
+      sub(this.containerOffset, 1), // above the divider
+      sub(add(this.containerOffset, this.dividerHeight), 1) // below the divider
     ),
     // no divider:
-    0
+    -1
   );
 
   onPanGestureEvent = event([
