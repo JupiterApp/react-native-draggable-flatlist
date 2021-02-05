@@ -35,21 +35,21 @@
   },
   "homepage": "https://github.com/computerjazz/react-native-draggable-flatlist#readme",
   "peerDependencies": {
-    "react-native": "^0.61.5",
+    "react-native": "^0.63.4",
     "react-native-gesture-handler": "^1.0.0",
     "react-native-reanimated": "^1.0.0"
   },
   "devDependencies": {
-    "@types/react": "^16.8.8",
-    "@types/react-native": "^0.60.8",
+    "@types/react": "^17.0.0",
+    "@types/react-native": "^0.63.46",
     "husky": "^4.2.0",
     "prettier": "1.19.1",
     "pretty-quick": "^2.0.1",
-    "react": "^16.12.0",
-    "react-native": "^0.61.5",
+    "react": "^16.13.1",
+    "react-native": "^0.63.4",
     "react-native-gesture-handler": "^1.5.3",
-    "react-native-reanimated": "^1.9.0",
     "react-native-iphone-x-helper": "^1.2.1",
+    "react-native-reanimated": "^1.9.0",
     "typescript": "^3.7.3"
   }
 }

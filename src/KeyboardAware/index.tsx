@@ -264,9 +264,9 @@ function KeyboardAwareHOC(
       });
     }
 
-    componentWillReceiveProps(nextProps: KeyboardAwareHOCProps) {
-      if (nextProps.viewIsInsideTabBar !== this.props.viewIsInsideTabBar) {
-        const keyboardSpace: number = nextProps.viewIsInsideTabBar
+    componentDidUpdate(prevProps: KeyboardAwareHOCProps) {
+      if (prevProps.viewIsInsideTabBar !== this.props.viewIsInsideTabBar) {
+        const keyboardSpace: number = this.props.viewIsInsideTabBar
           ? _KAM_DEFAULT_TAB_BAR_HEIGHT
           : 0;
         if (this.state.keyboardSpace !== keyboardSpace) {
@@ -401,7 +401,9 @@ function KeyboardAwareHOC(
           keyboardSpace -= _KAM_DEFAULT_TAB_BAR_HEIGHT;
         }
         this.setState({ keyboardSpace });
-        const currentlyFocusedField = TextInput.State.currentlyFocusedField();
+        const currentlyFocusedField = TextInput.State.currentlyFocusedInput
+          ? findNodeHandle(TextInput.State.currentlyFocusedInput())
+          : TextInput.State.currentlyFocusedField();
         const responder = this.getScrollResponder();
         if (!currentlyFocusedField || !responder) {
           return;
@@ -533,7 +535,9 @@ function KeyboardAwareHOC(
     };
 
     update = () => {
-      const currentlyFocusedField = TextInput.State.currentlyFocusedField();
+      const currentlyFocusedField = TextInput.State.currentlyFocusedInput
+        ? findNodeHandle(TextInput.State.currentlyFocusedInput())
+        : TextInput.State.currentlyFocusedField();
       const responder = this.getScrollResponder();
 
       if (!currentlyFocusedField || !responder) {
